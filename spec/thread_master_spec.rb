@@ -19,6 +19,33 @@ describe "ThreadMaster" do
     end
   end
   
+  describe "#join" do
+    it "should wait for threads to complete before exiting" do
+      tm = Threadage::ThreadMaster.new
+      3.times do
+        tm << Threadage::Worker.new(Thread.new { sleep 9; 5 + 5 }) 
+      end
+      tm.active.size.should == 3
+      tm.join
+      tm.cleanup
+      tm.active.size.should == 0
+    end
+  end
+  
+  describe "#exit_now"
+    it "should kill all threads immediately" do
+      tm = Threadage::ThreadMaster.new
+      3.times do
+        tm << Threadage::Worker.new(Thread.new { sleep 10 }) 
+      end
+      tm.active.size.should == 3
+      tm.exit_now
+      sleep 1
+      tm.cleanup
+      tm.active.size.should == 0
+    end
+  end
+  
   describe "#cleanup" do
     it "should create a new instance of ThreadMaster with the same amount of active threads" do
       tm = Threadage::ThreadMaster.new
