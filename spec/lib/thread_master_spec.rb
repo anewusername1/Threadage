@@ -1,4 +1,4 @@
-require 'spec_helper.rb'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe "ThreadMaster" do
   
@@ -32,7 +32,7 @@ describe "ThreadMaster" do
     end
   end
   
-  describe "#exit_now"
+  describe "#exit_now" do
     it "should kill all threads immediately" do
       tm = Threadage::ThreadMaster.new
       3.times do

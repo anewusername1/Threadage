@@ -1,5 +1,3 @@
-Warning!! As of right now (7/31/10) this library is only partially tested. Working on getting it completely tested and hopefully will achieve that within the week.
-
 This library is for managing threads. Use it like so
 
 require './threadage'

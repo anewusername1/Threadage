@@ -1,4 +1,4 @@
-require "spec_helper.rb"
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe "Worker" do
   

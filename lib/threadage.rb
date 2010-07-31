@@ -132,7 +132,7 @@ class Threadage
     terminate @loop_flag
   end
   
-  def terminate(how_to_exit)
+  def terminate(how_to_exit = nil)
     if how_to_exit == :kill_all
       @thread_master.exit_now
     else
@@ -148,7 +148,7 @@ class Threadage
   end
   
   def exit_thread
-    Thread.current.exit!
+    Thread.current.exit
   end
   
   def stop
@@ -160,14 +160,14 @@ class Threadage
   end
   
   def thread_it(block)
-    @afore_thread.call if defined? @afore_thread
+    @afore_thread.call if(defined?(@afore_thread))
     begin
       block.call
     rescue => e
       Threadage.logger.error e.message
       Threadage.logger.error e.backtrace.join("\n")
     end
-    @aft_thread.call if(defined? @aft_thread)
+    @aft_thread.call if(defined?(@aft_thread))
     exit_thread
   end
 

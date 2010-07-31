@@ -1,18 +1,48 @@
-require 'spec_helper.rb'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe "Threadage" do
   describe "self.logger" do
-    it "should print to stdout for :info, :debug, and :error" do
+    it "should have a logger with info, debug, and error methods" do
+      t = Threadage.new
+      Threadage.logger.should respond_to(:info)
+      Threadage.logger.should respond_to(:debug)
+      Threadage.logger.should respond_to(:error)
     end
   end
   
   describe "#afore_thread" do
     it "should accept a block and set the instance variable to that block" do
+      t = Threadage.new(2)
+      @afore_t_v = 3
+      t.afore_thread do
+        @afore_t_v = 6
+      end
+      
+      Thread.new do
+        t.start do
+          sleep 4
+        end
+      end
+      sleep 0.5
+      @afore_t_v.should == 6
     end
   end
   
   describe "#aft_thread" do
     it "should accept a block and set the instance variable to that block" do
+      t = Threadage.new(2)
+      @aft_t_v = 3
+      t.aft_thread do
+        @aft_t_v = 6
+      end
+      
+      Thread.new do
+        t.start do
+          5 + 5
+        end
+      end
+      sleep 0.5
+      @aft_t_v.should == 6
     end
   end
   
@@ -114,27 +144,31 @@ describe "Threadage" do
   
   describe "#terminate" do
     it "should wait for threads to complete if :kill_all is not passed to it" do
+      @var = "one"
+      t = Threadage.new(1)
+      Thread.new do
+        t.start do
+          sleep 2
+          @var = "two"
+        end
+      end
+      sleep 0.5
+      t.terminate
+      @var.should == "two"
     end
     
     it "should kill all threads if :kill_all is passed to it" do
-    end
-  end
-  
-  describe "#make_child" do
-    it "should connect the child and parent processes together through IOs" do
-    end
-    
-    it "should create a new child and execute the block" do
-    end
-  end
-  
-  describe "#child" do
-    it "should create a new process and execute the passed block" do
-    end
-  end
-  
-  describe "#handle_signals" do
-    it "should accept an array of signals to trap and.. trap them" do
+      @var = "one"
+      t = Threadage.new(1)
+      Thread.new do
+        t.start do
+          sleep 2
+          @var = "two"
+        end
+      end
+      sleep 0.5
+      t.terminate(:kill_all)
+      @var.should == "one"
     end
   end
 end
