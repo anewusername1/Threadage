@@ -1,0 +1,42 @@
+Warning!! As of right now (7/31/10) this library is only partially tested. Working on getting it completely tested and hopefully will achieve that within the week.
+
+This library is for managing threads. Use it like so
+
+require './threadage'
+tm = Threadage.new(5)
+tm.start do
+  puts "verking #{Thread.current}"
+  sleep rand(5)
+end
+
+It will continually execute the block passed to it.
+If you want control of the program back, you should start it within a thread
+Thread.new do
+  tm.start do
+    ...
+  end
+end
+
+That way you can continue doing things.
+
+You also have the ability to specify a block to run before creating a thread and one to run after the thread has executed the block. Like so:
+
+tm = Threadage.new(5)
+tm.afore_thread do
+  ...
+end
+
+tm.aft_thread do
+  ...
+end
+_
+
+You also have the option of dynamically specifying how many threads should run based on a number such as how many jobs are backed up in a queue, like so:
+Thread.new do
+  tm.start do
+    tm.max_threads = (Math.log(num_jobs * 3))
+    ...
+  end
+end
+
+Feel free to contact if you have any questions or issues

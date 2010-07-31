@@ -86,7 +86,7 @@ class Threadage
   # will be executing
   #
   # [block] block The block that will be executed
-  def afore_thread=(&block)
+  def afore_thread(&block)
     if block == nil then
       raise "block required"
     end
@@ -96,7 +96,7 @@ class Threadage
   # A block to be executed upon exiting a child process.
   #
   # [block] block The block that will be executed upon termination of a child process
-  def aft_thread=(&block)
+  def aft_thread(&block)
     if block == nil then
       raise "block required"
     end
