@@ -47,7 +47,7 @@ describe "ThreadMaster" do
   end
   
   describe "#cleanup" do
-    it "should create a new instance of ThreadMaster with the same amount of active threads" do
+    it "should create a new instance of ThreadMaster removing dead threads" do
       tm = Threadage::ThreadMaster.new
       3.times do
         tm << Threadage::Worker.new(Thread.new { sleep 5 }) 

@@ -12,7 +12,7 @@ describe "Threadage" do
   end
   
   describe "#aft_thread" do
-    it "should accept a block and set the instance variable to that block" do 
+    it "should accept a block and set the instance variable to that block" do
     end
   end
   
@@ -38,6 +38,7 @@ describe "Threadage" do
           sleep 2
         end
       end
+      sleep 0.5
       t.loop_flag.should == :in_loop
     end
     
@@ -48,28 +49,74 @@ describe "Threadage" do
           sleep 2
         end
       end
+      sleep 0.5
       t.thread_master.active.size.should == 3
     end
     
-    it "should run the block passed to it in the children forks" do
+    it "should run the block passed to the threads" do
+      @arbitrary_work = "uh huh"
+      t = Threadage.new(1)
+      Thread.new do
+        t.start do
+          @arbitrary_work = "nu uh"
+        end
+      end
+      sleep 0.5
+      @arbitrary_work.should == "nu uh"
+    end
+    
+    it "should maintain the amount of threads specified" do
+      t = Threadage.new(3)
+      Thread.new do
+        t.start do
+          if rand(2) == 1
+            Thread.current.exit
+          end
+          sleep 0.5
+        end
+      end
+      
+      sleep 0.5
+      t.thread_master.active.size.should == 3
+    end
+    
+    it "should increase the amount of threads to create if I tell it to" do
+      t = Threadage.new(2)
+      Thread.new do
+        t.start do
+          t.max_threads = 4
+          if rand(2) == 1
+            Thread.current.exit
+          end
+          sleep 0.5
+        end
+      end
+      
+      sleep 0.5
+      t.thread_master.active.size.should == 4
     end
   end
   
   describe "#stop" do
     it "should set the @flag variable to :break_loop" do
+      t = Threadage.new(3, true)
+      Thread.new do
+        t.start do
+          sleep 2
+        end
+      end
+      sleep 0.5
+      t.loop_flag.should == :in_loop
+      t.stop
+      t.loop_flag.should == :break_loop
     end
   end
   
   describe "#terminate" do
-    it "should raise an error if called while still in the loop" do
+    it "should wait for threads to complete if :kill_all is not passed to it" do
     end
     
-    it "should close all IO connections" do
-    end
-  end
-  
-  describe "#interrupt" do
-    it "should send the TERM signal to all childrens" do
+    it "should kill all threads if :kill_all is passed to it" do
     end
   end
   
