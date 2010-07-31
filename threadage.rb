@@ -1,1 +1,1 @@
-require 'lib/threadage'
+require './lib/threadage'

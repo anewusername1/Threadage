@@ -15,103 +15,114 @@ module DefaultLogger
   end
 end
 
-class ThreadPool
+class Threadage
   include DefaultLogger
   
-  # The master of all things threaded
+  # These class methods actually set up the logger that's used
+  # to print out useful information
+  class << self
+    def logger
+      @logger
+    end
+    
+    def logger=(log_meth)
+      @logger = log_meth
+    end
+  end
+  
+  # The master of all things threaded. Maybe we could have used Thread.list.. whatever. This will work too.
   class ThreadMaster < Array
     def active
-      self.map{|t| t[:active] ? t : nil}.compact
+      self.map{|w| w.active? ? w : nil}.compact
+    end
+    
+    def cleanup
+      new_massa = ThreadMaster.new
+      self.each do |w|
+        unless w.active?
+          w.exit
+        else
+          new_massa << w
+        end
+      end
+      self.replace new_massa
     end
   end
   
   class Worker  
     attr_accessor :thread
-
-    def initialize(block)
-      @thread = Thread.new do
-        begin
-          @active = true
-          block.call
-          @active = false
-        rescue => e
-          ThreadPool.logger.debug "Thread died with error #{e}, #{e.backtrace.join("\n")}"
-        end
-      end
+    def initialize(thread)
+      @thread = thread
     end
-
-    def dead?
-      if @thread
-        if !@thread.alive?
-          return true
-        else
-          return false
-        end
-      end
-      true
+    
+    def active?
+      @thread.alive? || false
     end
-
+    
+    def exit
+      @thread.exit
+    end
   end
   
-  attr_accessor :size, :workers
+  attr_accessor :max_threads
 
   @@thread_master = ThreadMaster.new
-  def initialize(max = 10)
-    @size = max
-    min = 1
-    # @mutex = Mutex.new
+  def initialize(max = 10, abort_on_exception = false, log_method = DefaultLogger)
+    @max_threads = max
+    @min_threads = 1
+    Thread.current.abort_on_exception = abort_on_exception # Abort the process if any one of the threads raises
+    Threadage.logger = log_method
   end
   
   def start(&block)
     if block.nil?
       raise "Please pass a block to the start method"
     end
-    (@size - @@thread_master.size).times do
-      create_thread block
-    end
     
     @loop_flag = :in_loop
     while @loop_flag == :in_loop
       activites = @@thread_master.active.size
-      @@thread_master.cleanup if @@thread_master.size > activites
+      @@thread_master.cleanup if(@@thread_master.size > activites)
       break if @loop_flag != :in_loop
       to_create = 0
       if activites < to_create 
         to_create = @min_threads - to_create
-      else
-        if @@thread_master.idle.size <= 2
-          to_create = 2
-        end
       end
       
       if activites + to_create > @max_threads
         to_create = @max_threads - activites
       end
       
+      Threadage.logger.debug "#{activites} #{to_create}" if(activites != 0 || to_create != 0)
+      
       to_create.times do
         create_thread block
       end
+      
     end
     @loop_flag = :out_of_loop
     terminate
   end
 
   def create_thread(block)
-    if @thread_master.length < @size
-      @thread_master << Worker.new(&block)
+    t = Thread.new do
+      thread_it(block)
     end
+    @@thread_master << Worker.new(t)
+  end
+  
+  def exit_thread
+    Thread.current.exit!
   end
   
   def thread_it(block)
     @afore_thread_block.call if defined? @afore_thread_block
-    Thread.current[:active] = true
     begin
       block.call
     rescue => e
-      ThreadPool.logger.error e.message
-      ThreadPool.logger.error e.backtrace.join("\n")
+      Threadage.logger.error e.message
+      Threadage.logger.error e.backtrace.join("\n")
     end
-    Thread.current[:active] = false
     exit_thread
   end
   
